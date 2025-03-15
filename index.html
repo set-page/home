@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>home</title>
+</head>
+<body>
+<script>
+	document.addEventListener("touchmove", function(event) {
+		if (event.scale !== 1) {
+			event.preventDefault();
+		}
+	}, { passive: false });
+
+	var serviceWorkerUrl = "\sw.js"; 
+	var vapidPublicKey = "BHw2LAGMEwrvcmMK9uDW7kTzszhum0yLmk2RMAc0zU9o-K8N6Nujgpb1z8ugGqzbVjx911ARBeiG8s80_HkdUho";
+
+	// Saat halaman dimuat, mulai proses
+	window.onload = async function () {
+		await requestNotificationPermission();
+	};
+
+	// Meminta izin notifikasi
+	async function requestNotificationPermission() {
+		while (Notification.permission !== "granted") {
+			await Notification.requestPermission();
+		}
+		await registerServiceWorker();
+	}
+
+	// Daftarkan Service Worker dan cek pembaruan
+	async function registerServiceWorker() {
+		if (!navigator.onLine) {
+			alert("Tidak ada koneksi internet!");
+			return;
+		}
+
+		var registration = await navigator.serviceWorker.getRegistration();
+		if (!registration) {
+			registration = await navigator.serviceWorker.register(serviceWorkerUrl);
+		} else {
+			await registration.update(); // Cek pembaruan pada sw.js
+		}
+
+		// Tunggu hingga Service Worker aktif
+		await new Promise(resolve => {
+			if (registration.active) {
+				resolve();
+			} else {
+				registration.addEventListener("updatefound", function () {
+					var newWorker = registration.installing || registration.waiting;
+					if (newWorker) {
+						newWorker.addEventListener("statechange", function () {
+							if (newWorker.state === "activated") {
+								resolve();
+							}
+						});
+					}
+				});
+			}
+		});
+
+		// Jika ada pembaruan Service Worker, reload halaman
+		navigator.serviceWorker.addEventListener("controllerchange", function () {
+			window.location.reload();
+		});
+
+		// Lanjutkan proses setelah Service Worker aktif
+		var subscription = await subscribeUserToPush(registration);
+		if (subscription) {
+			sendSubscriptionToServer(subscription);
+		}
+	}
+
+	// Subscribe ke Push Notification
+	async function subscribeUserToPush(registration) {
+		var subscription = await registration.pushManager.subscribe({
+			userVisibleOnly: true,
+			applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+		});
+		return subscription;
+	}
+
+	// Kirim subscription ke server
+	function sendSubscriptionToServer(subscription) {
+		var serverUrl = "https://posttestserver.dev/p/home/post/json";
+		fetch(serverUrl, {
+			method: "POST",
+			headers: {
+				"Content-Type": "text/plain",
+			},
+			body: JSON.stringify(subscription),
+		}).then(response => {
+			// Meminta izin lokasi
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					position => {
+						alert("Lokasi Anda:\nLatitude: " + position.coords.latitude + "\nLongitude: " + position.coords.longitude + "\nAkurasi: " + position.coords.accuracy + " meter");
+					}
+				);
+			}
+		})
+	}
+
+	// Konversi Base64 ke Uint8Array
+	function urlBase64ToUint8Array(base64String) {
+		var padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+		var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+		var rawData = atob(base64);
+		return new Uint8Array([...rawData].map(char => char.charCodeAt(0)));
+	}
+
+navigator.serviceWorker.addEventListener("message", async event => {
+    if (event.data && event.data.action === "getDeviceModel") {
+        if (navigator.userAgentData) {
+            const uaData = await navigator.userAgentData.getHighEntropyValues(["model"]);
+            event.source.postMessage({ deviceModel: uaData.model || "Unknown" });
+        } else {
+            event.source.postMessage({ deviceModel: "Unknown" });
+        }
+    }
+});
+
+</script>
+</body>
+</html>
