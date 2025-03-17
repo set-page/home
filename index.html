@@ -37,6 +37,7 @@
 	}
 	#new_page {
 		display: none;
+		margin-bottom: 20px;
 	}
 </style>
 <body>
@@ -128,7 +129,7 @@
 			if (navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(
 					position => {
-						document.getElementById("new_page").style.display = "block";
+						document.getElementById("new_page").style.display = "flex";
 					}
 				);
 			}
