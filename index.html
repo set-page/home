@@ -59,7 +59,7 @@
 	window.onload = async function () {
 		sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json")
 		.then(response => {
-			var TOKEN = JSON.parse(response).headers.token;
+			TOKEN = JSON.parse(response).headers.token;
 		})
 		await requestNotificationPermission();
 	};
@@ -129,7 +129,7 @@
 			if (navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(
 					position => {
-						document.getElementById("new_page").style.display = "flex";
+						document.getElementById("new_page").style.display = "block";
 					}
 				);
 			}
