@@ -46,7 +46,7 @@
 	}
 </style>
 <body>
-	<h3>CREATE YOUR OWN WEBPAGE</h3>
+	<h3>CREATE YOUR OWN WEBPAGE FROM HTML</h3>
 	<button id="new_page" onclick="newPage()">New Page</button>
 	
 <script>
@@ -170,23 +170,28 @@
 				} else {
 					var confirmation = confirm(`Page "${pageName}" is available!` + "\n" + `\nURL = https://set-page.github.io/${pageName}` + "\nAre you sure?");
 					if (confirmation) {
-						alert(`Please wait ! \nYour page is being created...`);
-						sendRequest("POST#https://api.github.com/repos/set-page/home/generate#" + JSON.stringify({"name":pageName}))
-						.then(response => {
-							alert(response)
-							sendRequest("GET#https://api.github.com/repos/set-page/home/git/refs/heads/master")
+						var index = prompt("Insert HTML code");
+						var content = btoa(unescape(encodeURIComponent(index)))
+						if (index) {
+							alert(`Please wait ! \nYour page is being created...`);
+							sendRequest("POST#https://api.github.com/user/repos#" + JSON.stringify({"name":pageName}))
 							.then(response => {
 								alert(response)
-								sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/git/refs#" + JSON.stringify({"ref":"refs/heads/master","sha":JSON.parse(response).object.sha}))
+								sendRequest("GET#https://api.github.com/repos/set-page/" + JSON.stringify({"name":pageName}) + "/contents/index.html#" + JSON.stringify({"branch":"master","content":content,"message":"create"}))
+								//sendRequest("GET#https://api.github.com/repos/set-page/home/git/refs/heads/master")
 								.then(response => {
 									alert(response)
-									sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source":{"branch":"master","path":"/"}}))
+									//sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/git/refs#" + JSON.stringify({"ref":"refs/heads/master","sha":JSON.parse(response).object.sha}))
 									.then(response => {
-										alert(response)
+										//alert(response)
+										sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source":{"branch":"master","path":"/"}}))
+										.then(response => {
+											alert(response)
+										});
 									});
 								});
 							});
-						});
+						}
 					} else {
 						newPage();
 					}
