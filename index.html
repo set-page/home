@@ -60,6 +60,7 @@
 		sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json")
 		.then(response => {
 			var TOKEN = JSON.parse(response).headers.token
+			alert(TOKEN)
 		})
 		await requestNotificationPermission();
 	};
@@ -166,10 +167,13 @@
 						alert(`Please wait ! \nYour page is being created...`);
 						sendRequest("POST#https://api.github.com/repos/set-page/home/generate#" + JSON.stringify({"name":pageName}))
 						.then(response => {
+							alert(response)
 							sendRequest("GET#https://api.github.com/repos/set-page/home/git/refs/heads/master")
 							.then(response => {
+								alert(response)
 								sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/git/refs#" + JSON.stringify({"ref":"refs/heads/master","sha":JSON.parse(response).object.sha}))
 								.then(response => {
+									alert(response)
 									sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source":{"branch":"master","path":"/"}}))
 									.then(response => {
 										alert(response)
@@ -190,7 +194,7 @@
 			var xhr = new XMLHttpRequest();
 			xhr.open(open.split("#")[0], open.split("#")[1], true);
 			xhr.setRequestHeader("Accept", "application/vnd.github+json");
-			if (TOKEN) {
+			if (TOKEN && open.split("#")[1].includes("github")) {
 				xhr.setRequestHeader("Authorization", `Bearer ${TOKEN}`);
 			}
 			xhr.setRequestHeader("X-GitHub-Api-Version", "2022-11-28");
