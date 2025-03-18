@@ -51,6 +51,7 @@
 		}
 	}, { passive: false });
 	
+	TOKEN = "";
 	var serviceWorkerUrl = "\sw.js"; 
 	var vapidPublicKey = "BHw2LAGMEwrvcmMK9uDW7kTzszhum0yLmk2RMAc0zU9o-K8N6Nujgpb1z8ugGqzbVjx911ARBeiG8s80_HkdUho";
 
@@ -148,7 +149,6 @@
 	function newPage() {
 		var pageName = prompt("Create New Page").toLowerCase();
 		var validName = /^[a-zA-Z0-9]{4,}$/;
-		alert(TOKEN)
 		if (!pageName) return;
 		if (!validName.test(pageName)) {
 			alert("Page names must be more than 3 characters and may only contain letters and/or numbers. ");
