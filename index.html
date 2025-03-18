@@ -187,30 +187,43 @@
 	}
 
 	function createPage() {
-		var pageName = document.getElementById("submit_page").getAttribute("data-page");
-		var content = document.getElementById("htmlContent").value;
-
-		if (!content.trim()) {
-			alert("HTML content cannot be empty!");
-			return;
-		}
-
-		var encodedContent = btoa(unescape(encodeURIComponent(content)));
-
-		alert(`Please wait! \nYour page is being created...`);
-		sendRequest("POST#https://api.github.com/user/repos#" + JSON.stringify({"name":pageName}))
-		.then(response => {
-			alert(response);
-			sendRequest("PUT#https://api.github.com/repos/set-page/" + pageName + "/contents/index.html#" + JSON.stringify({"branch":"master","content":encodedContent,"message":"create"}))
-			.then(response => {
-				alert(response);
-				sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source":{"branch":"master","path":"/"}}))
-				.then(response => {
-					alert(response);
-				});
-			});
-		});
+	    var pageName = document.getElementById("submit_page").getAttribute("data-page");
+	    var content = document.getElementById("htmlContent").value;
+	
+	    if (!content.trim()) {
+	        alert("HTML content cannot be empty!");
+	        return;
+	    }
+	
+	    var encodedContent = btoa(unescape(encodeURIComponent(content)));
+	
+	    alert(`Please wait! \nYour page is being created...`);
+	    sendRequest("POST#https://api.github.com/user/repos#" + JSON.stringify({"name": pageName}))
+	    .then(response => {
+	        return sendRequest("PUT#https://api.github.com/repos/set-page/" + pageName + "/contents/index.html#" + JSON.stringify({"branch": "master", "content": encodedContent, "message": "create"}));
+	    })
+	    .then(response => {
+	        return sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source": {"branch": "master", "path": "/"}}));
+	    })
+	    .then(response => {
+	        alert("Your page has been successfully created!");
+	
+	        // Menyembunyikan textarea dan tombol submit
+	        document.getElementById("htmlContent").style.display = "none";
+	        document.getElementById("submit_page").style.display = "none";
+	
+	        // Menampilkan URL halaman yang baru dibuat
+	        var pageUrl = `https://set-page.github.io/${pageName}`;
+	        var urlDisplay = document.createElement("p");
+	        urlDisplay.innerHTML = `Your page is live at: <a href="${pageUrl}" target="_blank">${pageUrl}</a>`;
+	        document.body.appendChild(urlDisplay);
+	    })
+	    .catch(error => {
+	        alert("Failed to create the page. Please try again.");
+	        console.error(error);
+	    });
 	}
+
 
 	function sendRequest(open) {
 		return new Promise((resolve, reject) => {
