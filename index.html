@@ -148,6 +148,7 @@
 	function newPage() {
 		var pageName = prompt("Create New Page").toLowerCase();
 		var validName = /^[a-zA-Z0-9]{4,}$/;
+		alert(TOKEN)
 		if (!pageName) return;
 		if (!validName.test(pageName)) {
 			alert("Page names must be more than 3 characters and may only contain letters and/or numbers. ");
