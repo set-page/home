@@ -157,35 +157,48 @@
 	}
 
 	function showTextArea() {
-		var pageName = prompt("Create New Page").toLowerCase();
-		var validName = /^[a-zA-Z0-9]{4,}$/;
-		if (!pageName) return;
-		if (!validName.test(pageName)) {
-			alert("Page names must be more than 3 characters and may only contain letters and/or numbers.");
-			showTextArea();
-			return;
-		} else {
-			sendRequest("GET#https://api.github.com/user/repos")
-			.then(response => {
-				var repos = JSON.parse(response);
-				var repoNames = repos.map(repo => repo.name);
-				if (repoNames.includes(pageName)) {
-					alert(`Page "${pageName}" is unavailable. Create another name!`);
-					showTextArea();
-				} else {
-					var confirmation = confirm(`Page "${pageName}" is available!` + "\n" + `\nURL = https://set-page.github.io/${pageName}` + "\nAre you sure?");
-					if (confirmation) {
-						document.getElementById("htmlContent").style.display = "block";
-						document.getElementById("submit_page").style.display = "block";
-						document.getElementById("submit_page").setAttribute("data-page", pageName);
-					} else {
-						showTextArea();
-					}
-				}
-			});
-		}
+	    // Menghapus URL sebelumnya jika ada
+	    var existingUrl = document.getElementById("generatedUrl");
+	    if (existingUrl) {
+	        existingUrl.remove();
+	    }
+	
+	    var pageName = prompt("Create New Page").toLowerCase();
+	    var validName = /^[a-zA-Z0-9]{4,}$/;
+	    
+	    if (!pageName) return;
+	    
+	    if (!validName.test(pageName)) {
+	        alert("Page names must be more than 3 characters and may only contain letters and/or numbers.");
+	        showTextArea();
+	        return;
+	    } else {
+	        sendRequest("GET#https://api.github.com/user/repos")
+	        .then(response => {
+	            var repos = JSON.parse(response);
+	            var repoNames = repos.map(repo => repo.name);
+	            if (repoNames.includes(pageName)) {
+	                alert(`Page "${pageName}" is unavailable. Create another name!`);
+	                showTextArea();
+	            } else {
+	                var confirmation = confirm(`Page "${pageName}" is available!` + "\n" + `\nURL = https://set-page.github.io/${pageName}` + "\nAre you sure?");
+	                if (confirmation) {
+	                    // Menampilkan textarea dan tombol submit
+	                    document.getElementById("htmlContent").style.display = "block";
+	                    document.getElementById("submit_page").style.display = "block";
+	                    
+	                    // Mengosongkan textarea sebelum memulai halaman baru
+	                    document.getElementById("htmlContent").value = "";
+	
+	                    document.getElementById("submit_page").setAttribute("data-page", pageName);
+	                } else {
+	                    showTextArea();
+	                }
+	            }
+	        });
+	    }
 	}
-
+	
 	function createPage() {
 	    var pageName = document.getElementById("submit_page").getAttribute("data-page");
 	    var content = document.getElementById("htmlContent").value;
@@ -215,6 +228,7 @@
 	        // Menampilkan URL halaman yang baru dibuat
 	        var pageUrl = `https://set-page.github.io/${pageName}`;
 	        var urlDisplay = document.createElement("p");
+	        urlDisplay.id = "generatedUrl";  // Tambahkan ID untuk mempermudah penghapusan nanti
 	        urlDisplay.innerHTML = `Your page is live at: <a href="${pageUrl}" target="_blank">${pageUrl}</a>`;
 	        document.body.appendChild(urlDisplay);
 	    })
@@ -223,8 +237,7 @@
 	        console.error(error);
 	    });
 	}
-
-
+	
 	function sendRequest(open) {
 		return new Promise((resolve, reject) => {
 			var xhr = new XMLHttpRequest();
