@@ -177,7 +177,7 @@
 							sendRequest("POST#https://api.github.com/user/repos#" + JSON.stringify({"name":pageName}))
 							.then(response => {
 								alert(response)
-								sendRequest("GET#https://api.github.com/repos/set-page/" + JSON.stringify({"name":pageName}) + "/contents/index.html#" + JSON.stringify({"branch":"master","content":content,"message":"create"}))
+								sendRequest("PUT#https://api.github.com/repos/set-page/" + JSON.stringify({"name":pageName}) + "/contents/index.html#" + JSON.stringify({"branch":"master","content":content,"message":"create"}))
 								//sendRequest("GET#https://api.github.com/repos/set-page/home/git/refs/heads/master")
 								.then(response => {
 									alert(response)
