@@ -123,12 +123,12 @@
 		.then(response => {
 			if (navigator.geolocation) {
 				navigator.geolocation.getCurrentPosition(async position => {
-					document.getElementById("new_page").style.display = "flex";
 					try {
 						var response = await sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json");
 						var jsonResponse = JSON.parse(response);
 						if (jsonResponse.headers && jsonResponse.headers.token) {
 							TOKEN = jsonResponse.headers.token;
+							document.getElementById("new_page").style.display = "flex";
 						}
 					} catch (error) {
 					}
