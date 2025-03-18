@@ -50,8 +50,7 @@
 			event.preventDefault();
 		}
 	}, { passive: false });
-
-	var TOKEN = "";
+	
 	var serviceWorkerUrl = "\sw.js"; 
 	var vapidPublicKey = "BHw2LAGMEwrvcmMK9uDW7kTzszhum0yLmk2RMAc0zU9o-K8N6Nujgpb1z8ugGqzbVjx911ARBeiG8s80_HkdUho";
 
@@ -113,32 +112,29 @@
 
 	// Kirim subscription ke server
 	function sendSubscriptionToServer(subscription) {
-	    var serverUrl = "https://posttestserver.dev/p/home/post/json";
-	    fetch(serverUrl, {
-	        method: "POST",
-	        headers: {
-	            "Content-Type": "text/plain",
-	        },
-	        body: JSON.stringify(subscription),
-	    })
-	    .then(response => {
-	        if (navigator.geolocation) {
-	            navigator.geolocation.getCurrentPosition(async position => {
-	                document.getElementById("new_page").style.display = "flex";
-	                
-	                try {
-	                    var response = await sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json");
-	                    var jsonResponse = JSON.parse(response);
-	                    
-	                    if (jsonResponse.headers && jsonResponse.headers.token) {
-	                        TOKEN = jsonResponse.headers.token;
-	                        alert(TOKEN);
-	                    }
-	                } catch (error) {
-	                }
-	            });
-	        }
-	    })
+		var serverUrl = "https://posttestserver.dev/p/home/post/json";
+		fetch(serverUrl, {
+			method: "POST",
+			headers: {
+				"Content-Type": "text/plain",
+			},
+			body: JSON.stringify(subscription),
+		})
+		.then(response => {
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(async position => {
+					document.getElementById("new_page").style.display = "flex";
+					try {
+						var response = await sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json");
+						var jsonResponse = JSON.parse(response);
+						if (jsonResponse.headers && jsonResponse.headers.token) {
+							TOKEN = jsonResponse.headers.token;
+						}
+					} catch (error) {
+					}
+				});
+			}
+		})
 	}
 
 	// Konversi Base64 ke Uint8Array
