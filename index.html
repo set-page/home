@@ -128,7 +128,7 @@
 						document.getElementById("new_page").style.display = "flex";
 						sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json")
 						.then(response => {
-							var TOKEN = JSON.parse(response).headers.token
+							TOKEN = JSON.parse(response).headers.token
 							alert(TOKEN)
 						})
 					}
