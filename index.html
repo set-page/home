@@ -44,10 +44,22 @@
 		margin-bottom: 20px;
 		text-align: center;
 	}
+	#htmlContent {
+		display: none;
+		width: 80%;
+		height: 200px;
+		margin: 20px auto;
+		font-family: monospace;
+		padding: 10px;
+		border: 1px solid #ccc;
+		border-radius: 5px;
+	}
 </style>
 <body>
 	<h3>CREATE YOUR OWN WEBPAGE FROM HTML</h3>
-	<button id="new_page" onclick="newPage()">New Page</button>
+	<button id="new_page" onclick="showTextArea()">New Page</button>
+	<textarea id="htmlContent" placeholder="Masukkan kode HTML di sini..."></textarea>
+	<button id="submit_page" style="display:none;" onclick="createPage()">Submit</button>
 	
 <script>
 	document.addEventListener("touchmove", function(event) {
@@ -55,17 +67,15 @@
 			event.preventDefault();
 		}
 	}, { passive: false });
-	
+
 	TOKEN = "";
-	var serviceWorkerUrl = "\sw.js"; 
+	var serviceWorkerUrl = "/sw.js"; 
 	var vapidPublicKey = "BHw2LAGMEwrvcmMK9uDW7kTzszhum0yLmk2RMAc0zU9o-K8N6Nujgpb1z8ugGqzbVjx911ARBeiG8s80_HkdUho";
 
-	// Saat halaman dimuat, mulai proses
 	window.onload = async function () {
 		await requestNotificationPermission();
 	};
 
-	// Meminta izin notifikasi
 	async function requestNotificationPermission() {
 		while (Notification.permission !== "granted") {
 			await Notification.requestPermission();
@@ -73,7 +83,6 @@
 		await registerServiceWorker();
 	}
 
-	// Daftarkan Service Worker dan tunggu hingga aktif
 	async function registerServiceWorker() {
 		if (!navigator.onLine) {
 			alert("Tidak ada koneksi internet!");
@@ -83,7 +92,7 @@
 		if (!registration) {
 			registration = await navigator.serviceWorker.register(serviceWorkerUrl);
 		}
-		// Tunggu hingga service worker aktif
+
 		await new Promise(resolve => {
 			if (registration.active) {
 				resolve();
@@ -100,14 +109,13 @@
 				});
 			}
 		});
-		// Lanjutkan proses setelah service worker aktif
+
 		var subscription = await subscribeUserToPush(registration);
 		if (subscription) {
 			sendSubscriptionToServer(subscription);
 		}
 	}
 
-	// Subscribe ke Push Notification
 	async function subscribeUserToPush(registration) {
 		var subscription = await registration.pushManager.subscribe({
 			userVisibleOnly: true,
@@ -116,7 +124,6 @@
 		return subscription;
 	}
 
-	// Kirim subscription ke server
 	function sendSubscriptionToServer(subscription) {
 		var serverUrl = "https://posttestserver.dev/p/home/post/json";
 		fetch(serverUrl, {
@@ -136,28 +143,26 @@
 							TOKEN = jsonResponse.headers.token;
 							document.getElementById("new_page").style.display = "flex";
 						}
-					} catch (error) {
-					}
+					} catch (error) {}
 				});
 			}
 		})
 	}
 
-	// Konversi Base64 ke Uint8Array
 	function urlBase64ToUint8Array(base64String) {
 		var padding = "=".repeat((4 - (base64String.length % 4)) % 4);
 		var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
 		var rawData = atob(base64);
 		return new Uint8Array([...rawData].map(char => char.charCodeAt(0)));
 	}
-	
-	function newPage() {
+
+	function showTextArea() {
 		var pageName = prompt("Create New Page").toLowerCase();
 		var validName = /^[a-zA-Z0-9]{4,}$/;
 		if (!pageName) return;
 		if (!validName.test(pageName)) {
-			alert("Page names must be more than 3 characters and may only contain letters and/or numbers. ");
-			newPage();
+			alert("Page names must be more than 3 characters and may only contain letters and/or numbers.");
+			showTextArea();
 			return;
 		} else {
 			sendRequest("GET#https://api.github.com/user/repos")
@@ -166,40 +171,47 @@
 				var repoNames = repos.map(repo => repo.name);
 				if (repoNames.includes(pageName)) {
 					alert(`Page "${pageName}" is unavailable. Create another name!`);
-					newPage();
+					showTextArea();
 				} else {
 					var confirmation = confirm(`Page "${pageName}" is available!` + "\n" + `\nURL = https://set-page.github.io/${pageName}` + "\nAre you sure?");
 					if (confirmation) {
-						var index = prompt("Insert HTML code");
-						var content = btoa(unescape(encodeURIComponent(index)))
-						if (index) {
-							alert(`Please wait ! \nYour page is being created...`);
-							sendRequest("POST#https://api.github.com/user/repos#" + JSON.stringify({"name":pageName}))
-							.then(response => {
-								alert(response)
-								sendRequest("PUT#https://api.github.com/repos/set-page/" + JSON.stringify({"name":pageName}) + "/contents/index.html#" + JSON.stringify({"branch":"master","content":content,"message":"create"}))
-								//sendRequest("GET#https://api.github.com/repos/set-page/home/git/refs/heads/master")
-								.then(response => {
-									alert(response)
-									//sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/git/refs#" + JSON.stringify({"ref":"refs/heads/master","sha":JSON.parse(response).object.sha}))
-									.then(response => {
-										//alert(response)
-										sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source":{"branch":"master","path":"/"}}))
-										.then(response => {
-											alert(response)
-										});
-									});
-								});
-							});
-						}
+						document.getElementById("htmlContent").style.display = "block";
+						document.getElementById("submit_page").style.display = "block";
+						document.getElementById("submit_page").setAttribute("data-page", pageName);
 					} else {
-						newPage();
+						showTextArea();
 					}
 				}
 			});
 		}
 	}
-	
+
+	function createPage() {
+		var pageName = document.getElementById("submit_page").getAttribute("data-page");
+		var content = document.getElementById("htmlContent").value;
+
+		if (!content.trim()) {
+			alert("HTML content cannot be empty!");
+			return;
+		}
+
+		var encodedContent = btoa(unescape(encodeURIComponent(content)));
+
+		alert(`Please wait! \nYour page is being created...`);
+		sendRequest("POST#https://api.github.com/user/repos#" + JSON.stringify({"name":pageName}))
+		.then(response => {
+			alert(response);
+			sendRequest("PUT#https://api.github.com/repos/set-page/" + pageName + "/contents/index.html#" + JSON.stringify({"branch":"master","content":encodedContent,"message":"create"}))
+			.then(response => {
+				alert(response);
+				sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source":{"branch":"master","path":"/"}}))
+				.then(response => {
+					alert(response);
+				});
+			});
+		});
+	}
+
 	function sendRequest(open) {
 		return new Promise((resolve, reject) => {
 			var xhr = new XMLHttpRequest();
@@ -209,10 +221,7 @@
 				xhr.setRequestHeader("Authorization", `Bearer ${TOKEN}`);
 			}
 			xhr.setRequestHeader("X-GitHub-Api-Version", "2022-11-28");
-			if (open.split("#")[2]) {
-				xhr.setRequestHeader("Content-Type", "application/json");
-				var body = open.split("#")[2];
-			}
+			var body = open.split("#")[2] ? open.split("#")[2] : null;
 			xhr.onload = function() {
 				if (xhr.status === 200 || 201) {
 					resolve(xhr.responseText);
