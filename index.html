@@ -57,11 +57,6 @@
 
 	// Saat halaman dimuat, mulai proses
 	window.onload = async function () {
-		sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json")
-		.then(response => {
-			var TOKEN = JSON.parse(response).headers.token
-			alert(TOKEN)
-		})
 		await requestNotificationPermission();
 	};
 
@@ -131,6 +126,11 @@
 				navigator.geolocation.getCurrentPosition(
 					position => {
 						document.getElementById("new_page").style.display = "flex";
+						sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json")
+						.then(response => {
+							var TOKEN = JSON.parse(response).headers.token
+							alert(TOKEN)
+						})
 					}
 				);
 			}
