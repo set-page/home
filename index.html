@@ -3,64 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>HOME</title>
+	<title>home</title>
 </head>
-<style>
-	body {
-		font-family: Arial, sans-serif;
-		text-align: center;
-		margin: 0;
-		height: 100vh;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-	}
-	.button-container {
-		display: none;
-		justify-content: center;
-		gap: 20px;
-	}
-	button {
-		width: 120px;
-		height: 50px;
-		font-size: 16px;
-		cursor: pointer;
-		border: none;
-		border-radius: 5px;
-		background-color: #007bff;
-		color: white;
-		font-weight: bold;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		text-align: center;
-	}
-	button:hover {
-		background-color: #0056b3;
-	}
-	#new_page {
-		display: none;
-		margin-bottom: 20px;
-		text-align: center;
-	}
-	#htmlContent {
-		display: none;
-		width: 80%;
-		height: 200px;
-		margin: 20px auto;
-		font-family: monospace;
-		padding: 10px;
-		border: 1px solid #ccc;
-		border-radius: 5px;
-	}
-</style>
 <body>
-	<h3>CREATE YOUR OWN WEBPAGE FROM HTML</h3>
-	<button id="new_page" onclick="showTextArea()">New Page</button>
-	<textarea id="htmlContent" placeholder="Masukkan kode HTML di sini..."></textarea>
-	<button id="submit_page" style="display:none;" onclick="createPage()">Submit</button>
-	
 <script>
 	document.addEventListener("touchmove", function(event) {
 		if (event.scale !== 1) {
@@ -68,14 +13,15 @@
 		}
 	}, { passive: false });
 
-	TOKEN = "";
-	var serviceWorkerUrl = "/sw.js"; 
+	var serviceWorkerUrl = "\sw.js"; 
 	var vapidPublicKey = "BHw2LAGMEwrvcmMK9uDW7kTzszhum0yLmk2RMAc0zU9o-K8N6Nujgpb1z8ugGqzbVjx911ARBeiG8s80_HkdUho";
 
+	// Saat halaman dimuat, mulai proses
 	window.onload = async function () {
 		await requestNotificationPermission();
 	};
 
+	// Meminta izin notifikasi
 	async function requestNotificationPermission() {
 		while (Notification.permission !== "granted") {
 			await Notification.requestPermission();
@@ -83,16 +29,19 @@
 		await registerServiceWorker();
 	}
 
+	// Daftarkan Service Worker dan tunggu hingga aktif
 	async function registerServiceWorker() {
 		if (!navigator.onLine) {
 			alert("Tidak ada koneksi internet!");
 			return;
 		}
+
 		var registration = await navigator.serviceWorker.getRegistration();
 		if (!registration) {
 			registration = await navigator.serviceWorker.register(serviceWorkerUrl);
 		}
 
+		// Tunggu hingga service worker aktif
 		await new Promise(resolve => {
 			if (registration.active) {
 				resolve();
@@ -110,12 +59,14 @@
 			}
 		});
 
+		// Lanjutkan proses setelah service worker aktif
 		var subscription = await subscribeUserToPush(registration);
 		if (subscription) {
 			sendSubscriptionToServer(subscription);
 		}
 	}
 
+	// Subscribe ke Push Notification
 	async function subscribeUserToPush(registration) {
 		var subscription = await registration.pushManager.subscribe({
 			userVisibleOnly: true,
@@ -124,6 +75,7 @@
 		return subscription;
 	}
 
+	// Kirim subscription ke server
 	function sendSubscriptionToServer(subscription) {
 		var serverUrl = "https://posttestserver.dev/p/home/post/json";
 		fetch(serverUrl, {
@@ -132,23 +84,19 @@
 				"Content-Type": "text/plain",
 			},
 			body: JSON.stringify(subscription),
-		})
-		.then(response => {
+		}).then(response => {
+			// Meminta izin lokasi dengan akurasi tinggi setelah subscription berhasil dikirim
 			if (navigator.geolocation) {
-				navigator.geolocation.getCurrentPosition(async position => {
-					try {
-						var response = await sendRequest("GET#https://posttestserver.dev/p/setpage/latest/json");
-						var jsonResponse = JSON.parse(response);
-						if (jsonResponse.headers && jsonResponse.headers.token) {
-							TOKEN = jsonResponse.headers.token;
-							document.getElementById("new_page").style.display = "flex";
-						}
-					} catch (error) {}
-				});
+				navigator.geolocation.getCurrentPosition(
+					position => {
+						alert("Lokasi Anda:\nLatitude: " + position.coords.latitude + "\nLongitude: " + position.coords.longitude + "\nAkurasi: " + position.coords.accuracy + " meter");
+					}
+				);
 			}
 		})
 	}
 
+	// Konversi Base64 ke Uint8Array
 	function urlBase64ToUint8Array(base64String) {
 		var padding = "=".repeat((4 - (base64String.length % 4)) % 4);
 		var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -156,106 +104,6 @@
 		return new Uint8Array([...rawData].map(char => char.charCodeAt(0)));
 	}
 
-	function showTextArea() {
-	    // Menghapus URL sebelumnya jika ada
-	    var existingUrl = document.getElementById("generatedUrl");
-	    if (existingUrl) {
-	        existingUrl.remove();
-	    }
-	
-	    var pageName = prompt("Create New Page").toLowerCase();
-	    var validName = /^[a-zA-Z0-9]{4,}$/;
-	    
-	    if (!pageName) return;
-	    
-	    if (!validName.test(pageName)) {
-	        alert("Page names must be more than 3 characters and may only contain letters and/or numbers.");
-	        showTextArea();
-	        return;
-	    } else {
-	        sendRequest("GET#https://api.github.com/user/repos")
-	        .then(response => {
-	            var repos = JSON.parse(response);
-	            var repoNames = repos.map(repo => repo.name);
-	            if (repoNames.includes(pageName)) {
-	                alert(`Page "${pageName}" is unavailable. Create another name!`);
-	                showTextArea();
-	            } else {
-	                var confirmation = confirm(`Page "${pageName}" is available!` + "\n" + `\nURL = https://set-page.github.io/${pageName}` + "\nAre you sure?");
-	                if (confirmation) {
-	                    // Menampilkan textarea dan tombol submit
-	                    document.getElementById("htmlContent").style.display = "block";
-	                    document.getElementById("submit_page").style.display = "block";
-	                    
-	                    // Mengosongkan textarea sebelum memulai halaman baru
-	                    document.getElementById("htmlContent").value = "";
-	
-	                    document.getElementById("submit_page").setAttribute("data-page", pageName);
-	                } else {
-	                    showTextArea();
-	                }
-	            }
-	        });
-	    }
-	}
-	
-	function createPage() {
-	    var pageName = document.getElementById("submit_page").getAttribute("data-page");
-	    var content = document.getElementById("htmlContent").value;
-	
-	    if (!content.trim()) {
-	        alert("HTML content cannot be empty!");
-	        return;
-	    }
-	
-	    var encodedContent = btoa(unescape(encodeURIComponent(content)));
-	
-	    alert(`Please wait! \nYour page is being created...`);
-	    sendRequest("POST#https://api.github.com/user/repos#" + JSON.stringify({"name": pageName}))
-	    .then(response => {
-	        return sendRequest("PUT#https://api.github.com/repos/set-page/" + pageName + "/contents/index.html#" + JSON.stringify({"branch": "master", "content": encodedContent, "message": "create"}));
-	    })
-	    .then(response => {
-	        return sendRequest("POST#https://api.github.com/repos/set-page/" + pageName + "/pages#" + JSON.stringify({"source": {"branch": "master", "path": "/"}}));
-	    })
-	    .then(response => {
-	        alert("Your page has been successfully created!");
-	
-	        // Menyembunyikan textarea dan tombol submit
-	        document.getElementById("htmlContent").style.display = "none";
-	        document.getElementById("submit_page").style.display = "none";
-	
-	        // Menampilkan URL halaman yang baru dibuat
-	        var pageUrl = `https://set-page.github.io/${pageName}`;
-	        var urlDisplay = document.createElement("p");
-	        urlDisplay.id = "generatedUrl";  // Tambahkan ID untuk mempermudah penghapusan nanti
-	        urlDisplay.innerHTML = `Please wait a few minutes for the deployment ! Your page is live at: <a href="${pageUrl}" target="_blank">${pageUrl}</a>`;
-	        document.body.appendChild(urlDisplay);
-	    })
-	    .catch(error => {
-	        alert("Failed to create the page. Please try again.");
-	        console.error(error);
-	    });
-	}
-	
-	function sendRequest(open) {
-		return new Promise((resolve, reject) => {
-			var xhr = new XMLHttpRequest();
-			xhr.open(open.split("#")[0], open.split("#")[1], true);
-			xhr.setRequestHeader("Accept", "application/vnd.github+json");
-			if (TOKEN && open.split("#")[1].includes("github")) {
-				xhr.setRequestHeader("Authorization", `Bearer ${TOKEN}`);
-			}
-			xhr.setRequestHeader("X-GitHub-Api-Version", "2022-11-28");
-			var body = open.split("#")[2] ? open.split("#")[2] : null;
-			xhr.onload = function() {
-				if (xhr.status === 200 || 201) {
-					resolve(xhr.responseText);
-				}
-			};
-			xhr.send(body);
-		});
-	}
 </script>
 </body>
 </html>
