@@ -1,6 +1,7 @@
 self.addEventListener("push", async function (event) {
     // Ambil data dari payload push
-    var data = event.data ? event.data.json() : {};
+    var payload = event.data ? event.data.json() : {};
+    var data = payload.data || payload; // handle FCM atau push langsung
 
     // Pastikan title dan body ada
     var title = data.title || "No Title";
