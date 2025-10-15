@@ -1,31 +1,28 @@
-self.addEventListener("push", function (event) {
-  console.log("[ServiceWorker] Push event received");
+// Service Worker - menangani event Push API
+self.addEventListener("push", async function (event) {
+  console.log("[ServiceWorker] Push event diterima.");
 
+  // Ambil data dari payload (jika ada)
   let payload = {};
   try {
-    if (event.data) {
-      // Coba parse JSON
-      payload = event.data.json();
-      console.log("[ServiceWorker] Payload:", payload);
-    } else {
-      console.warn("[ServiceWorker] No data in push event");
-    }
+    payload = event.data ? event.data.json() : {};
   } catch (e) {
-    console.error("[ServiceWorker] Error parsing push data:", e);
+    console.error("[ServiceWorker] Gagal parse payload:", e);
   }
 
-  // Ambil data dari payload (baik di root atau di bawah "data")
+  // Ambil isi data (bisa langsung dari root atau dari field 'data')
   const data = payload.data || payload;
 
-  const title = data.title || "Notifikasi";
-  const body = data.body || "(tidak ada isi)";
-  const url = (data.url || "/");
+  // Pastikan title & body ada nilai default
+  const title = data.title || "No Title";
+  const body = data.body || "No message content";
 
+  // Siapkan opsi notifikasi
   const options = {
-    body,
-    icon: "/icons/icon-192.png", // opsional
-    badge: "/icons/badge.png",   // opsional
-    data: { url }
+    body: body,
+    data: {
+      url: data.url || "../home" // URL yang dibuka saat notifikasi diklik
+    }
   };
 
   // Tampilkan notifikasi
