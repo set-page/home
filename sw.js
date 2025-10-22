@@ -1,8 +1,11 @@
-// Service Worker - menangani event Push API
 self.addEventListener("push", async function (event) {
-  console.log("[ServiceWorker] Push event diterima.");
+  console.log("[ServiceWorker] Push event diterima:", event);
+  if (!event.data) {
+    console.warn("[ServiceWorker] event.data kosong -> payload gagal didekripsi.");
+  } else {
+    console.log("[ServiceWorker] event.data ada:", event.data);
+  }
 
-  // Ambil data dari payload (jika ada)
   let payload = {};
   try {
     payload = event.data ? event.data.json() : {};
@@ -10,23 +13,16 @@ self.addEventListener("push", async function (event) {
     console.error("[ServiceWorker] Gagal parse payload:", e);
   }
 
-  // Ambil isi data (bisa langsung dari root atau dari field 'data')
   const data = payload.data || payload;
-
-  // Pastikan title & body ada nilai default
   const title = data.title || "No Title";
   const body = data.body || "No message content";
 
-  // Siapkan opsi notifikasi
+  console.log("[ServiceWorker] Title:", title, "Body:", body);
+
   const options = {
     body: body,
-    data: {
-      url: data.url || "../home" // URL yang dibuka saat notifikasi diklik
-    }
+    data: { url: data.url || "../home" }
   };
 
-  // Tampilkan notifikasi
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil(self.registration.showNotification(title, options));
 });
