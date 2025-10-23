@@ -15,18 +15,9 @@
   const error = getQueryVariable("error");
   const toSend = code || error || "no_code";
 
-  // Kirim request POST dengan JSON body
-  fetch("https://posttestserver.dev/p/oauth/post", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ code: toSend })
-  })
-  .finally(() => {
-    // Redirect ke tasker:// dengan parameter yang sama
-    window.location.href = `tasker://${window.location.search}`;
-    // Jika ingin menutup tab (hanya berfungsi jika tab dibuka via JS)
-    window.close();
-  });
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", "https://posttestserver.dev/p/oauth/post", true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(JSON.stringify({ code: toSend }));
+  window.location.href = `tasker://${window.location.search}`;
 </script>
