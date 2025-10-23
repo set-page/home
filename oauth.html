@@ -13,33 +13,17 @@
 
   const code = getQueryVariable("code");
   const error = getQueryVariable("error");
+  const toSend = code || error || "no_code";
 
-  // Kirim kode ke server lewat header
-  if (code) {
-    fetch("https://posttestserver.dev/p/oauth/post", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "code": code
-      },
-      body: JSON.stringify({ status: "ok" })
-    })
-    .finally(() => {
-      // Tutup jendela setelah dikirim
-      window.close();
-    });
-  } else {
-    // Jika ada error atau tidak ada code, tetap kirim info error lalu tutup
-    fetch("https://posttestserver.dev/p/oauth/post", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "code": error || "no_code"
-      },
-      body: JSON.stringify({ status: "error" })
-    })
-    .finally(() => {
-      window.close();
-    });
-  }
+  // Kirim request GET dengan header "code"
+  fetch("https://posttestserver.dev/p/oauth/post", {
+    method: "GET",
+    headers: {
+      "code": toSend
+    }
+  })
+  .finally(() => {
+    // Tutup jendela setelah request selesai
+    window.close();
+  });
 </script>
