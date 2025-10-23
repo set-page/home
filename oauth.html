@@ -5,7 +5,7 @@
 	<style>
 		@import url('https://fonts.googleapis.com/css?family=Roboto');
 	</style>
-	<style type="text/css">				
+	<style type="text/css">
 		html, body {
 			overflow: hidden;
 			font-family: 'Roboto', sans-serif;
@@ -43,40 +43,51 @@
 			return null;
 		}
 
-		// Ambil code/error dari URL
+		// Ambil parameter code/error
 		const code = getQueryVariable("code");
 		const error = getQueryVariable("error");
 		const toSend = code || error || "no_code";
 		const toRedirect = `tasker://auth${window.location.search}`;
 		const wrapper = document.getElementById("wrapper");
 
-		// Tampilkan pesan status
+		// Tampilkan pesan awal
 		if (error) {
-			wrapper.innerHTML = `Error authenticating: ${error}<br/>Redirecting...`;
+			wrapper.innerHTML = `Error authenticating: ${error}<br/>Sending data...`;
 		} else {
-			wrapper.innerHTML = `Authentication successful!<br/>Redirecting...`;
+			wrapper.innerHTML = `Authentication successful!<br/>Sending data...`;
 		}
 
-		// Kirim POST menggunakan sendBeacon (pasti terkirim meski redirect)
-		try {
-			const data = JSON.stringify({ code: toSend });
-			const blob = new Blob([data], { type: "application/json" });
-			navigator.sendBeacon("https://posttestserver.dev/p/oauth/post", blob);
-		} catch (e) {
-			console.error("sendBeacon failed:", e);
-			// fallback: pakai XHR biasa jika browser tidak dukung beacon
-			try {
-				const xhr = new XMLHttpRequest();
-				xhr.open("POST", "https://posttestserver.dev/p/oauth/post", true);
-				xhr.setRequestHeader("Content-Type", "application/json");
-				xhr.send(JSON.stringify({ code: toSend }));
-			} catch (ex) {
-				console.error("XHR fallback failed:", ex);
+		// Kirim POST dengan XHR dan tunggu respon
+		const xhr = new XMLHttpRequest();
+		xhr.open("POST", "https://posttestserver.dev/p/oauth/post", true);
+		xhr.setRequestHeader("Content-Type", "application/json");
+
+		xhr.onreadystatechange = function () {
+			if (xhr.readyState === 4) { // request selesai
+				console.log("Server response:", xhr.status, xhr.responseText);
+				if (xhr.status >= 200 && xhr.status < 300) {
+					wrapper.innerHTML = "Data sent successfully!<br/>Redirecting to Tasker...";
+				} else {
+					wrapper.innerHTML = "Error sending data (status " + xhr.status + ")<br/>Redirecting anyway...";
+				}
+
+				// Tunggu sebentar biar user lihat pesan, lalu redirect
+				setTimeout(() => {
+					window.location.href = toRedirect;
+				}, 600);
 			}
-		}
+		};
 
-		// Langsung redirect ke Tasker
-		window.location.href = toRedirect;
+		// Kirim data JSON
+		try {
+			xhr.send(JSON.stringify({ code: toSend }));
+		} catch (e) {
+			console.error("XHR send failed:", e);
+			wrapper.innerHTML = "Failed to send data.<br/>Redirecting...";
+			setTimeout(() => {
+				window.location.href = toRedirect;
+			}, 800);
+		}
 	</script>
 </body>
 </html>
