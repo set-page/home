@@ -1,28 +1,19 @@
-self.addEventListener("push", async function (event) {
-  console.log("[ServiceWorker] Push event diterima:", event);
+self.addEventListener('push', event => {
+  console.log('[ServiceWorker] Push diterima');
   if (!event.data) {
-    console.warn("[ServiceWorker] event.data kosong -> payload gagal didekripsi.");
-  } else {
-    console.log("[ServiceWorker] event.data ada:", event.data);
+    console.warn('[ServiceWorker] event.data kosong!');
+    return;
   }
-
-  let payload = {};
   try {
-    payload = event.data ? event.data.json() : {};
+    const data = event.data.json();
+    console.log('[ServiceWorker] Payload:', data);
+    event.waitUntil(
+      self.registration.showNotification(data.data.title, {
+        body: data.data.body,
+        data: { url: data.data.url }
+      })
+    );
   } catch (e) {
-    console.error("[ServiceWorker] Gagal parse payload:", e);
+    console.error('[ServiceWorker] Gagal parse:', e);
   }
-
-  const data = payload.data || payload;
-  const title = data.title || "No Title";
-  const body = data.body || "No message content";
-
-  console.log("[ServiceWorker] Title:", title, "Body:", body);
-
-  const options = {
-    body: body,
-    data: { url: data.url || "../home" }
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
 });
