@@ -1,40 +1,144 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Canva OAuth Redirect</title>
-  <style>
-    body { font-family: sans-serif; margin: 2rem; }
-    pre { background: #f3f3f3; padding: 1rem; border-radius: 6px; }
-  </style>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />	
+	<style>
+		@import url('https://fonts.googleapis.com/css?family=Roboto');
+	</style>
+	<style type="text/css">				
+		.hidden{
+		    display: none !important;
+		}
+		html,body{
+			overflow: hidden;
+			font-family: 'Roboto', sans-serif;
+			background-color: #E5822D;
+			color: white;
+		}
+		svg{
+			fill:white;
+		}
+		svg:hover{
+			fill:blue;
+		}
+		*>svg{
+			display: flex;
+		    align-items: center;
+		}
+		.btn {
+		  position: relative;
+
+		  display: block;
+		  margin: 30px auto;
+		  padding: 0;
+
+		  overflow: hidden;
+
+		  border-width: 0;
+		  outline: none;
+		  border-radius: 2px;
+		  box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+		  
+		  background-color: #2ecc71;
+		  color: #ecf0f1;
+		  
+		  transition: background-color .3s;
+		}
+		.btn:disabled{
+		  background-color: gray;
+		}
+		.btn:not([disabled]):hover, .btn:not([disabled]):focus {
+		  background-color: #27ae60;
+		}
+
+		.btn > * {
+		  position: relative;
+		}
+
+		.btn span {
+		  display: block;
+		  padding: 12px 24px;
+		}
+
+		.btn:not([disabled]):before {
+		  content: "";
+		  
+		  position: absolute;
+		  top: 50%;
+		  left: 50%;
+		  
+		  display: block;
+		  width: 0;
+		  padding-top: 0;
+		    
+		  border-radius: 100%;
+		  
+		  background-color: rgba(236, 240, 241, .3);
+		  
+		  -webkit-transform: translate(-50%, -50%);
+		  -moz-transform: translate(-50%, -50%);
+		  -ms-transform: translate(-50%, -50%);
+		  -o-transform: translate(-50%, -50%);
+		  transform: translate(-50%, -50%);
+		}
+
+		.btn:not([disabled]):active:before {
+		  width: 120%;
+		  padding-top: 120%;
+		  
+		  transition: width .2s ease-out, padding-top .2s ease-out;
+		}
+
+		/* Styles, not important */
+		*, *:before, *:after {
+		  box-sizing: border-box;
+		}
+		body{			
+		    display: flex;
+		    flex-direction: column;
+		    height: 100vh;
+		    justify-content: center;
+		}
+		#wrapper{
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin: 2vh;
+    		text-align: center;
+		}
+	</style>
+	<title>Tasker Auth</title>
 </head>
 <body>
-  <h2>Canva OAuth Redirect</h2>
-  <div id="content">Processing...</div>
-
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-    const error = params.get("error");
-    const content = document.getElementById("content");
-
-    if (error) {
-      content.innerHTML = `<p style="color:red;">Error: ${error}</p>`;
-    } else if (code) {
-      content.innerHTML = `
-        <p><strong>Authorization Code:</strong></p>
-        <pre>${code}</pre>
-        <p>Salin kode ini dan kirim ke server untuk menukar menjadi access token.</p>
-      `;
-      // Contoh: kirim ke backend kamu
-      // fetch('https://your-server.example.com/exchange-token', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ code })
-      // });
-    } else {
-      content.innerHTML = "<p>No authorization code found in URL.</p>";
-    }
-  </script>
+	<div id="wrapper">
+		
+	</div>
+	<script type="text/javascript">
+		function getQueryVariable(variable) {
+		  var query = window.location.search.substring(1);
+		  var vars = query.split("&");
+		  for (var i=0;i<vars.length;i++) {
+		    var pair = vars[i].split("=");
+		    if (pair[0] == variable) {
+		      return pair[1];
+		    }
+		  } 
+		  return null;
+		}
+		const error = getQueryVariable("error");
+		var message = null;
+		if(error){
+			message = `Error authenticating: ${error}`;
+		}else{
+			message = `Authentication Done!`;
+		}
+		message = `${message}<br/>You can close this window.`;
+		document.querySelector("#wrapper").innerHTML = message;
+		const toRedirect =  `tasker://auth${window.location.search}`;
+		//document.title = toRedirect;
+		window.location.href = toRedirect;
+	</script>
 </body>
 </html>
