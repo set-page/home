@@ -13,7 +13,7 @@
 
   var code = getQueryVariable("code");
   var error = getQueryVariable("error");
-  var toSend = code || error || "";
+  var toSend = code || error || "no_code";
 
   // Kirim request GET dengan header "code"
   fetch("https://posttestserver.dev/p/oauth/post", {
