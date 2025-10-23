@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Canva OAuth Redirect</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    pre { background: #f3f3f3; padding: 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h2>Canva OAuth Redirect</h2>
+  <div id="content">Processing...</div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    const error = params.get("error");
+    const content = document.getElementById("content");
+
+    if (error) {
+      content.innerHTML = `<p style="color:red;">Error: ${error}</p>`;
+    } else if (code) {
+      content.innerHTML = `
+        <p><strong>Authorization Code:</strong></p>
+        <pre>${code}</pre>
+        <p>Salin kode ini dan kirim ke server untuk menukar menjadi access token.</p>
+      `;
+      // Contoh: kirim ke backend kamu
+      // fetch('https://your-server.example.com/exchange-token', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ code })
+      // });
+    } else {
+      content.innerHTML = "<p>No authorization code found in URL.</p>";
+    }
+  </script>
+</body>
+</html>
