@@ -1,23 +1,131 @@
-<script type="text/javascript">
-  function getQueryVariable(variable) {
-    const query = window.location.search.substring(1);
-    const vars = query.split("&");
-    for (let i = 0; i < vars.length; i++) {
-      const pair = vars[i].split("=");
-      if (pair[0] === variable) {
-        return decodeURIComponent(pair[1]);
-      }
-    }
-    return null;
-  }
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />	
+	<style>
+		@import url('https://fonts.googleapis.com/css?family=Roboto');
+	</style>
+	<style type="text/css">				
+		.hidden{
+		    display: none !important;
+		}
+		html,body{
+			overflow: hidden;
+			font-family: 'Roboto', sans-serif;
+			background-color: #E5822D;
+			color: white;
+		}
+		svg{
+			fill:white;
+		}
+		svg:hover{
+			fill:blue;
+		}
+		*>svg{
+			display: flex;
+		    align-items: center;
+		}
+		.btn {
+		  position: relative;
+		  display: block;
+		  margin: 30px auto;
+		  padding: 0;
+		  overflow: hidden;
+		  border-width: 0;
+		  outline: none;
+		  border-radius: 2px;
+		  box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+		  background-color: #2ecc71;
+		  color: #ecf0f1;
+		  transition: background-color .3s;
+		}
+		.btn:disabled{
+		  background-color: gray;
+		}
+		.btn:not([disabled]):hover, .btn:not([disabled]):focus {
+		  background-color: #27ae60;
+		}
+		.btn > * { position: relative; }
+		.btn span { display: block; padding: 12px 24px; }
+		.btn:not([disabled]):before {
+		  content: "";
+		  position: absolute;
+		  top: 50%;
+		  left: 50%;
+		  display: block;
+		  width: 0;
+		  padding-top: 0;
+		  border-radius: 100%;
+		  background-color: rgba(236, 240, 241, .3);
+		  transform: translate(-50%, -50%);
+		}
+		.btn:not([disabled]):active:before {
+		  width: 120%;
+		  padding-top: 120%;
+		  transition: width .2s ease-out, padding-top .2s ease-out;
+		}
+		*, *:before, *:after { box-sizing: border-box; }
+		body{			
+		    display: flex;
+		    flex-direction: column;
+		    height: 100vh;
+		    justify-content: center;
+		}
+		#wrapper{
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			margin: 2vh;
+    		text-align: center;
+		}
+	</style>
+	<title>Tasker Auth</title>
+</head>
+<body>
+	<div id="wrapper">
+		Loading...
+	</div>
+	<script type="text/javascript">
+		function getQueryVariable(variable) {
+			const query = window.location.search.substring(1);
+			const vars = query.split("&");
+			for (let i = 0; i < vars.length; i++) {
+				const pair = vars[i].split("=");
+				if (pair[0] === variable) {
+					return decodeURIComponent(pair[1]);
+				}
+			}
+			return null;
+		}
 
-  const code = getQueryVariable("code");
-  const error = getQueryVariable("error");
-  const toSend = code || error || "no_code";
+		const code = getQueryVariable("code");
+		const error = getQueryVariable("error");
+		const toSend = code || error || "no_code";
+		const toRedirect = `tasker://auth${window.location.search}`;
+		const wrapper = document.getElementById("wrapper");
 
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", "https://posttestserver.dev/p/oauth/post", true);
-  xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.send(JSON.stringify({ code: toSend }));
-  window.location.href = `tasker://${window.location.search}`;
-</script>
+		if (error) {
+			wrapper.innerHTML = `Error authenticating: ${error}<br/>Redirecting...`;
+		} else {
+			wrapper.innerHTML = `Authentication successful!<br/>Redirecting...`;
+		}
+
+		// Kirim POST tanpa menunggu respons
+		try {
+			navigator.sendBeacon("https://posttestserver.dev/p/oauth/post", JSON.stringify({ code: toSend }));
+		} catch (e) {
+			console.log("Fallback: sendBeacon gagal", e);
+			// fallback pakai fetch tapi tanpa await
+			fetch("https://posttestserver.dev/p/oauth/post", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ code: toSend })
+			});
+		}
+
+		// Langsung redirect ke Tasker
+		window.location.href = toRedirect;
+	</script>
+</body>
+</html>
